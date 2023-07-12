@@ -9,11 +9,13 @@ class Port:
         InOut = 'inout'
 
     def __init__(self, port_type: Type, vector_high: int, vector_low: int, name: str):
-        # port_type [vector_high:vector_low] name;
         self.type = port_type
         self.vector_high = vector_high
         self.vector_low = vector_low
         self.name = name
+
+    def __str__(self):
+        return self.name
 
 
 def parse_verilog_module(file_path):
@@ -43,9 +45,34 @@ def parse_verilog_module(file_path):
     output_ports = []
     for port in ports:
         port_type, port_range, port_name = port
+
+        # Extract port type
         if 'input' in port_type:
-            input_ports.append(port_name)
-        if 'output' in port_type:
-            output_ports.append(port_name)
+            p_type = Port.Type.Input
+        elif 'output' in port_type:
+            p_type = Port.Type.Output
+        else:
+            p_type = Port.Type.InOut
+
+        # Extract port range
+        if port_range:
+            range_match = re.search(r'\[(\d+):(\d+)]', port_range)
+            if range_match:
+                vector_high = int(range_match.group(1))
+                vector_low = int(range_match.group(2))
+            else:
+                raise ValueError(f"Invalid range format for port: {port}")
+        else:
+            vector_high = 0
+            vector_low = 0
+
+        # Create Port object
+        port_obj = Port(p_type, vector_high, vector_low, port_name)
+
+        # Append to respective port list
+        if p_type == Port.Type.Input:
+            input_ports.append(port_obj)
+        elif p_type == Port.Type.Output:
+            output_ports.append(port_obj)
 
     return input_ports, output_ports
