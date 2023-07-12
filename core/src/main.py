@@ -2,7 +2,9 @@ import verilog_parser
 
 
 def main():
-    verilog_parser.parse_verilog_module('../test/test.v')
+    inputs, outputs = verilog_parser.parse_verilog_module('../test/test.v')
+    print('Input ports:', inputs)
+    print('Output ports:', outputs)
 
 
 if __name__ == '__main__':

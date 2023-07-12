@@ -18,11 +18,3 @@ def parse_verilog_module(file_path):
     output_ports = [re.search(r'\w+', port).group() for port in output_ports]
 
     return input_ports, output_ports
-
-
-# Usage example
-module_file = 'example_module.v'
-inputs, outputs = parse_verilog_module(module_file)
-
-print('Input ports:', inputs)
-print('Output ports:', outputs)
