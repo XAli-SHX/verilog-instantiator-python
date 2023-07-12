@@ -1,4 +1,19 @@
 import re
+from enum import Enum
+
+
+class Port:
+    class Type(Enum):
+        Input = 'input'
+        Output = 'output'
+        InOut = 'inout'
+
+    def __init__(self, port_type: Type, vector_high: int, vector_low: int, name: str):
+        # port_type [vector_high:vector_low] name;
+        self.type = port_type
+        self.vector_high = vector_high
+        self.vector_low = vector_low
+        self.name = name
 
 
 def parse_verilog_module(file_path):
