@@ -2,7 +2,7 @@ import verilog_parser
 
 
 def main():
-    pass
+    verilog_parser.parse_verilog_module('../test/test.v')
 
 
 if __name__ == '__main__':
