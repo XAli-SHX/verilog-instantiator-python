@@ -6,16 +6,12 @@ class Port:
     class Type(Enum):
         Input = 'input'
         Output = 'output'
-        InOut = 'inout'
 
-    def __init__(self, port_type: Type, vector_high: int, vector_low: int, name: str):
+    def __init__(self, port_type: Type, vector_high: str, vector_low: str, name: str):
         self.type = port_type
         self.vector_high = vector_high
         self.vector_low = vector_low
         self.name = name
-
-    def __str__(self):
-        return self.name
 
 
 def parse_verilog_module(file_path):
@@ -24,55 +20,45 @@ def parse_verilog_module(file_path):
 
     content = content.replace('\n', ' ')
 
-    # Regular expression to match module declaration and port list
-    module_regex = r'module\s+(\w+)\s*\((.*?)\);'
-
     # Find module declaration and port list
-    module_match = re.search(module_regex, content, re.DOTALL)
+    module_match = re.search(r'module\s+(\w+)\s*\((.*?)\);', content, re.DOTALL)
     if not module_match:
         raise ValueError("Failed to find module declaration")
 
     module_name = module_match.group(1)
     port_list = module_match.group(2)
 
-    # Regular expression to match individual ports
-    port_regex = r'\s*(input|output|inout)?\s*(\[\d+:\d+\])?\s*(\w+)\s*(?:|\))'
-
     # Find input and output ports
-    ports = re.findall(port_regex, port_list)
+    ports = re.findall(r'(input|output)'
+                       r'(?:\s*(\[\w+:\w+\]\s*)|\s+)'
+                       r'([^;]*);',
+                       content)
 
     input_ports = []
     output_ports = []
     for port in ports:
-        port_type, port_range, port_name = port
+        port_type, port_range, port_names = port
+        same_line_ports = port_names.split(',')
+        same_line_ports = [p.strip() for p in same_line_ports]
 
         # Extract port type
-        if 'input' in port_type:
-            p_type = Port.Type.Input
-        elif 'output' in port_type:
-            p_type = Port.Type.Output
-        else:
-            p_type = Port.Type.InOut
+        if 'input' in port:
+            port_type = Port.Type.Input
+        elif 'output' in port:
+            port_type = Port.Type.Output
 
         # Extract port range
+        vector_high, vector_low = 0, 0
         if port_range:
-            range_match = re.search(r'\[(\d+):(\d+)]', port_range)
-            if range_match:
-                vector_high = int(range_match.group(1))
-                vector_low = int(range_match.group(2))
-            else:
-                raise ValueError(f"Invalid range format for port: {port}")
-        else:
-            vector_high = 0
-            vector_low = 0
+            vector_high, vector_low = port_range[1:-1].split(':')
 
         # Create Port object
-        port_obj = Port(p_type, vector_high, vector_low, port_name)
-
-        # Append to respective port list
-        if p_type == Port.Type.Input:
-            input_ports.append(port_obj)
-        elif p_type == Port.Type.Output:
-            output_ports.append(port_obj)
+        for port_name in same_line_ports:
+            port = Port(port_type, vector_high, vector_low, port_name)
+            # Append to respective port list
+            if port_type == Port.Type.Input:
+                input_ports.append(port)
+            elif port_type == Port.Type.Output:
+                output_ports.append(port)
 
     return input_ports, output_ports
